@@ -8,7 +8,6 @@ use http\Exception\BadMethodCallException;
 use SincronizarEvento\Calendario;
 use SincronizarEvento\Evento;
 use SincronizarEvento\Sincronizar;
-use PDO;
 
 class SincronizarCSV implements Sincronizar
 {

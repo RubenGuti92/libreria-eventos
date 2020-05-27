@@ -19,7 +19,7 @@ use Google_Service_Calendar_Event;
 use Google_Service_Calendar_EventDateTime;
 use Psr\Log\LoggerInterface;
 
-class SincronizarGSUITE implements Sincronizar
+class SincronizarGSUITE extends AbstractSincronizar
 {
     /**
      * @var Google_Client
@@ -68,7 +68,7 @@ class SincronizarGSUITE implements Sincronizar
          * - Año de la fecha del inicio del evento
          *
          */
-        $id = self::_generarIdEvento($evento, $calendario);
+        $id = self::generarIdEvento($evento, $calendario);
         $evento->setIdEvento($id);
 
         $evento_google = self::_generarEventoGoogle($evento);
@@ -93,7 +93,7 @@ class SincronizarGSUITE implements Sincronizar
 //        $cliente = $this->cliente;
         $this->cliente->setSubject($calendarios->getCalendario());
 
-        $id = self::_generarIdEvento($evento, $calendarios);
+        $id = self::generarIdEvento($evento, $calendarios);
         $evento->setIdEvento($id);
         $evento_google = self::_generarEventoGoogle($evento);
 
@@ -116,7 +116,7 @@ class SincronizarGSUITE implements Sincronizar
 //        $cliente = $this->cliente;
         $this->cliente->setSubject($calendarios->getCalendario());
 
-        $idEventoEliminar = self::_generarIdEvento($evento, $calendarios);
+        $idEventoEliminar = self::generarIdEvento($evento, $calendarios);
         $evento->setIdEvento($idEventoEliminar);
 
         $evento_google = self::_generarEventoGoogle($evento);
@@ -148,7 +148,7 @@ class SincronizarGSUITE implements Sincronizar
             $fechas_evento = self::_generarFechasEvento($evento);
             $recordatorios = self::_generarRecordatorios($evento);
 
-            $idEvento = self::_generarIdEvento($evento, $calendario);
+            $idEvento = self::generarIdEvento($evento, $calendario);
             $evento_google = $servicio_google->events->get('primary', $idEvento);
             $comparacion_evento = Sincronizar::EXISTE_IGUAL;
             $string_cambios = "";//Variable donde vamos a almacenar los campos en los que se encontran cambios en el evento respecto al pasado
@@ -292,7 +292,7 @@ class SincronizarGSUITE implements Sincronizar
                     /**
                      * @var Google_Service_Calendar_Event $evento
                      */
-                    $datos_id_evento = $this->_descifrarIdEvento($evento->getId());
+                    $datos_id_evento = self::descifrarIdEvento($evento->getId());
                     if (!$datos_id_evento) {
                         //Si nos devuleve false pasamos del evento ya que no esta generado por nosotros
                         continue;
@@ -431,58 +431,6 @@ class SincronizarGSUITE implements Sincronizar
 
 
         return $event; // Devolvemos el evento de google
-    }
-    /**
-     * Función que genera el id del evento sirve para generarlo como para poder identificar el evento
-     *
-     * @param Evento $evento
-     * @param string $calendario
-     * @return string
-     */
-    private static function _generarIdEvento(Evento $evento, Calendario $calendario): string
-    {
-        //Nos quedamos con la parte del usuario quitando la parte del correo
-        $calendario = explode('@', $calendario);
-        $calendario = $calendario[0];
-        $calendario = str_replace('.', '', $calendario);
-
-        //Generamos una cadena que sera el id unico del evento une usuario-idEvento-año del evento
-        $id =  self::PREFIJO_ID_EVENTO. '-' . $calendario . '-' . $evento->getIdEvento() . '-' . date('Y', strtotime($evento->getFechaInicio()));
-
-        //Ciframos en hexadecimal para no tener problemas con simbolos extraños
-        $id = bin2hex($id);
-        return $id;
-    }
-
-    /**
-     * Función que genera el id del evento sirve para generarlo como para poder identificar el evento
-     *
-     * @param string $idUnicoEvento
-     * @return array|false
-     */
-    private static function _descifrarIdEvento(string $idUnicoEvento)
-    {
-        //Array que devolveremos con los datos
-        $descomposicion_id_evento = array();
-
-        //Comprobamos si el valor pasado es hexadecimal para ver si lo podemos descifrar
-        if (ctype_xdigit($idUnicoEvento)) {
-            // Pasamos a string el hexadecimal que hemos recibido y que ha sido cifrado por la funcion generarIdEvento
-            // comprobando si es un evento generado por nosotros, si no es asi lo "descartamos"
-            $idUnicoEvento = hex2bin($idUnicoEvento);
-            $partes_id = explode('-', $idUnicoEvento);
-            if (isset($partes_id[0]) && $partes_id[0] == self::PREFIJO_ID_EVENTO) {
-                $descomposicion_id_evento['calendario'] = $partes_id[1];
-                $descomposicion_id_evento['idEvento'] = $partes_id[2];
-                $descomposicion_id_evento['anioEvento'] = $partes_id[3];
-            } else {
-                $descomposicion_id_evento = false;
-            }
-        } else {
-            $descomposicion_id_evento = false;
-        }
-
-        return $descomposicion_id_evento;
     }
 
     /**
