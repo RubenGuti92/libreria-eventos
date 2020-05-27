@@ -1,0 +1,16 @@
+{
+    "name": "ruben-gutierrez/administrador-eventos-masivos",
+    "description": "Paquete que permitirá controlar eventos de usuarios de forma masiva",
+    "authors": [
+        {
+            "name": "Rubén Gutiérrez Pérez",
+            "email": "rubengutiperez@gmail.com"
+        }
+    ],
+    "require": {
+        "google/apiclient": "^2.0",
+        "psr/log": "^1.1",
+        "monolog/monolog": "^2.0"
+
+    }
+}
