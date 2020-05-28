@@ -24,8 +24,13 @@ class SincronizarGSUITE extends AbstractSincronizar
     /**
      * @var Google_Client
      */
-    public $cliente;
+    private $cliente;
     private $logger;
+
+
+    const ESTADO_EVENTO_CONFIRMADO = 'confirmed';
+    const ESTADO_EVENTO_CONFIRMADO_PARCIAL = 'tentative';
+    const ESTADO_EVENTO_ELIMINADO = 'cancelled';
 
     public function __construct($cliente, $logger)
     {
@@ -34,6 +39,9 @@ class SincronizarGSUITE extends AbstractSincronizar
         $this->logger = $logger;
     }
 
+    /**
+     * @inheritDoc
+     */
     public function comprobarCalendario(Calendario $calendario)
     {
         $this->cliente->setSubject($calendario->getCalendario());
@@ -51,7 +59,6 @@ class SincronizarGSUITE extends AbstractSincronizar
     /**
      * @inheritDoc
      */
-//    public function aniadirEvento(Evento $evento, Calendario $calendario)
     public function aniadirEvento(Evento $evento, Calendario $calendario)
     {
         $this->logger->debug('Se inserta un evento');
@@ -120,7 +127,7 @@ class SincronizarGSUITE extends AbstractSincronizar
         $evento->setIdEvento($idEventoEliminar);
 
         $evento_google = self::_generarEventoGoogle($evento);
-        $evento_google->setStatus('cancelled');
+        $evento_google->setStatus(self::ESTADO_EVENTO_ELIMINADO);
 
 
         $servicio_google = new Google_Service_Calendar($this->cliente);
@@ -212,7 +219,7 @@ class SincronizarGSUITE extends AbstractSincronizar
                 $string_cambios .= "color, ";
             }
 
-            if ($evento_google->getStatus() == $this::ESTADO_EVENTO_ELIMINADO) {
+            if ($evento_google->getStatus() == self::ESTADO_EVENTO_ELIMINADO) {
                 $comparacion_evento = Sincronizar::EXISTE_CAMBIOS_ESTADO_ELIMINADO;
                 $this->logger->debug('El evento se encuentra eliminado');
                 $string_cambios .= "estado ";
@@ -224,7 +231,7 @@ class SincronizarGSUITE extends AbstractSincronizar
             return $comparacion_evento;
         } catch (Google_Service_Exception $ex) {
             $this->logger->debug('El evento no existe (id buscado: ' . $idEvento . ')');
-            $this->logger->error($ex->getErrors());
+            $this->logger->error('Error:'.$ex->getMessage());
             return Sincronizar::NO_EXISTE;
         }
     }
@@ -325,9 +332,9 @@ class SincronizarGSUITE extends AbstractSincronizar
                     }
                     //Obtenemos el estado
                     switch ($evento->getStatus()) {
-                        case Sincronizar::ESTADO_EVENTO_CONFIRMADO:
-                        case Sincronizar::ESTADO_EVENTO_CONFIRMADO_PARCIAL:
-                            $estado = 'CREADO';
+                        case self::ESTADO_EVENTO_CONFIRMADO:
+                        case self::ESTADO_EVENTO_CONFIRMADO_PARCIAL:
+                            $estado = Sincronizar::ESTADO_EVENTO_ACTIVO;
                             break;
                         case Sincronizar::ESTADO_EVENTO_ELIMINADO:
                             $estado = 'ELIMINADO';

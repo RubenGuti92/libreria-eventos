@@ -16,9 +16,8 @@ interface Sincronizar
     const ACCION_INSERTAR = 'insertar';
     const ACCION_ELIMINAR = 'eliminar';
     const ACCION_ACTUALIZAR = 'actualizar';
-    const ESTADO_EVENTO_CONFIRMADO = 'confirmed';
-    const ESTADO_EVENTO_CONFIRMADO_PARCIAL = 'tentative';
-    const ESTADO_EVENTO_ELIMINADO = 'cancelled';
+    const ESTADO_EVENTO_ACTIVO = 'activo';
+    const ESTADO_EVENTO_ELIMINADO = 'eliminado';
     const RECORDATORIO_TIPO_EMAIL = 'email';
     const RECORDATORIO_TIPO_POPUP = 'popup';
 
@@ -49,6 +48,12 @@ interface Sincronizar
      * @return int
      */
     public function comprobarEvento(Evento $evento, Calendario $calendario);
+
+    /**
+     * @param Calendario $calendario
+     * @return bool
+     */
+    public function comprobarCalendario(Calendario $calendario);
 
     /**
      * @param array $options

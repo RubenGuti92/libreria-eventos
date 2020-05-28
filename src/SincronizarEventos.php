@@ -7,6 +7,8 @@ use http\Exception\RuntimeException;
 use SincronizarEvento\CSV\CalendarioCSV;
 use SincronizarEvento\CSV\EventoCSV;
 use SincronizarEvento\CSV\SincronizarCSV;
+use SincronizarEvento\DB\SincronizarDB;
+use SincronizarEvento\GSUITE\SincronizarGSUITE;
 
 require "autoload.php";
 
@@ -101,7 +103,8 @@ class SincronizarEventos
                     /**
                      * @var $evento_calendario EventoCalendario
                      */
-                    if (!$this->destino->comprobarCalendario($evento_calendario->getCalendario())) {
+                    if ($this->destino instanceof SincronizarGSUITE && !$this->destino->comprobarCalendario($evento_calendario->getCalendario())) {
+                        //En caso de que no exista el calendario en Gsuite no se puede insertar el evento por lo que alamcenamos en el log error y continuamos
                         $this->logger->warning('El calendario indicado no existe.');
                         continue;
                     }
@@ -112,7 +115,7 @@ class SincronizarEventos
                             if ($comprobacion_evento == Sincronizar::EXISTE_CAMBIOS_ESTADO_ELIMINADO) {
                                 $this->logger->debug('El evento ya existe pero esta eliminado, se procede a editarlo y activarlo.');
                                 //Como esta eliminado lo que hacemos es cambiar su estado a "confirmado" es decir activo
-                                $evento_calendario->getEvento()->setEstado(Sincronizar::ESTADO_EVENTO_CONFIRMADO);
+                                $evento_calendario->getEvento()->setEstado(Sincronizar::ESTADO_EVENTO_ACTIVO);
                                 $this->destino->modificarEvento($evento_calendario->getEvento(), $evento_calendario->getCalendario());
                             } else if ($comprobacion_evento == Sincronizar::NO_EXISTE) {
                                 $this->logger->debug('El evento no existe.');

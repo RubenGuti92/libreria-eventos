@@ -12,8 +12,8 @@ use SincronizarEvento\Sincronizar;
 class SincronizarCSV implements Sincronizar
 {
 
-    public $logger;
     const DELIMITADOR_FICHERO = ';';
+    private $logger;
 
     /**
      * SincronizarCSV constructor.
@@ -82,6 +82,15 @@ class SincronizarCSV implements Sincronizar
      * @inheritDoc
      */
     public function comprobarEvento(Evento $evento, Calendario $calendario)
+    {
+        // Función no implmentada
+        return new BadMethodCallException('Esta función no esta implementada');
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function comprobarCalendario(Calendario $calendario)
     {
         // Función no implmentada
         return new BadMethodCallException('Esta función no esta implementada');
