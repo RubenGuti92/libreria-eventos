@@ -24,6 +24,7 @@ class EventoCSV implements Evento
     private $usado;
     private $todoElDia;
     private $accion;
+    private $estado;
 
 
     /**
@@ -207,7 +208,7 @@ class EventoCSV implements Evento
 
     public function getEstado()
     {
-        return $this->accion;
+        return $this->estado;
     }
 
     public function setEstado($estado)

@@ -110,6 +110,9 @@ class SincronizarEventos
                     }
                     $this->logger->debug('Calendario: ' . $evento_calendario->getCalendario()->getCalendario() . ' - Evento: ' . $evento_calendario->getEvento()->getIdEvento() . ' - Accion: ' . $evento_calendario->getEvento()->getAccion());
                     $comprobacion_evento = $this->destino->comprobarEvento($evento_calendario->getEvento(), $evento_calendario->getCalendario());
+                    if($evento_calendario->getEvento()->getAccion() == "" | $evento_calendario->getEvento()->getAccion() == null){
+                        $evento_calendario->getEvento()->setAccion(Sincronizar::ACCION_INSERTAR);
+                    }
                     switch ($evento_calendario->getEvento()->getAccion()) {
                         case Sincronizar::ACCION_INSERTAR:
                             if ($comprobacion_evento == Sincronizar::EXISTE_CAMBIOS_ESTADO_ELIMINADO) {
@@ -133,7 +136,7 @@ class SincronizarEventos
                         case Sincronizar::ACCION_ACTUALIZAR:
                             if ($comprobacion_evento == Sincronizar::EXISTE_CAMBIOS_ESTADO_ELIMINADO) {
                                 $this->logger->debug('El evento ya existe pero esta eliminado, se activará y actualizará.');
-                                $evento_calendario->getEvento()->setEstado(Sincronizar::ESTADO_EVENTO_CONFIRMADO);
+                                $evento_calendario->getEvento()->setEstado(Sincronizar::ESTADO_EVENTO_ACTIVO);
                                 $this->destino->modificarEvento($evento_calendario->getEvento(), $evento_calendario->getCalendario());
                             } else if ($comprobacion_evento == Sincronizar::EXISTE_CAMBIOS) {
                                 $this->destino->modificarEvento($evento_calendario->getEvento(), $evento_calendario->getCalendario());

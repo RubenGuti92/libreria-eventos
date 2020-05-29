@@ -429,6 +429,10 @@ class SincronizarGSUITE extends AbstractSincronizar
 //            ),
         ));
 
+        if($evento->getEstado() == self::ESTADO_EVENTO_ACTIVO){
+            $event->setStatus(self::ESTADO_EVENTO_CONFIRMADO);
+        }
+
         //Añadimos los recordatorios en caso de exisitir
         $reminder = self::_generarRecordatorios($evento);
 

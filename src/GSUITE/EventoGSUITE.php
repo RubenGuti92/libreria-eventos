@@ -23,6 +23,8 @@ class EventoGSUITE implements Evento
     private $colorId;
     private $usado;
     private $todoElDia;
+    private $accion;
+    private $estado;
 
 
     /**
