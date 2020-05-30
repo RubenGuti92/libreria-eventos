@@ -231,7 +231,7 @@ class SincronizarGSUITE extends AbstractSincronizar
             return $comparacion_evento;
         } catch (Google_Service_Exception $ex) {
             $this->logger->debug('El evento no existe (id buscado: ' . $idEvento . ')');
-            $this->logger->error('Error:'.$ex->getMessage());
+            $this->logger->error('Error:' . $ex->getMessage());
             return Sincronizar::NO_EXISTE;
         }
     }
@@ -243,14 +243,12 @@ class SincronizarGSUITE extends AbstractSincronizar
      */
     public function obtenerEventos($opciones)
     {
-
+        //Array donde almacenaremos los datos encontrados en el calendario
+        $datos_evento_calendario = array();
         /**
          * @var Calendario
          */
         $calendario = $opciones['calendario'];
-
-        //Array donde almacenaremos los datos encontrados en el calendario
-        $datos_encontrados = array();
 
         //Correo al que se le inserta el evento
         $this->cliente->setSubject($calendario);
@@ -336,8 +334,8 @@ class SincronizarGSUITE extends AbstractSincronizar
                         case self::ESTADO_EVENTO_CONFIRMADO_PARCIAL:
                             $estado = Sincronizar::ESTADO_EVENTO_ACTIVO;
                             break;
-                        case Sincronizar::ESTADO_EVENTO_ELIMINADO:
-                            $estado = 'ELIMINADO';
+                        case self::ESTADO_EVENTO_ELIMINADO:
+                            $estado = Sincronizar::ESTADO_EVENTO_ELIMINADO;
                             break;
 
                     }
@@ -359,14 +357,15 @@ class SincronizarGSUITE extends AbstractSincronizar
                             }
                         }
                     }
-                    //Guardamos en el array el evento recuperado
-                    $datos_encontrados['eventos'][$evento_encontrado->getIdEvento()] = $evento_encontrado;
 
                     //Generamos la relacion evento calendario y lo guardamos en el array separados por estado
                     $evento_calendario = new EventoCalendarioGSUITE();
                     $evento_calendario->setCalendario($calendario_encontrado);
+                    $evento_calendario->setIdEventoCalendario(self::generarIdEvento($evento_encontrado, $calendario_encontrado));
                     $evento_calendario->setEvento($evento_encontrado);
-                    $datos_encontrados['eventos_calendario'][$estado][] = $evento_calendario;
+
+                    $datos_evento_calendario[] = $evento_calendario;
+
                 }
                 $pageToken = $listadoEventos->getNextPageToken();
                 if ($pageToken) {
@@ -378,7 +377,7 @@ class SincronizarGSUITE extends AbstractSincronizar
             } while ($salir == 1);
 
 
-            return $datos_encontrados;
+            return $datos_evento_calendario;
             $this->logger->debug('Evento actualizado id:' . $id);
         } catch (Google_Service_Exception $ex) {
             $this->logger->error('Error al modificar un evento:', $ex->getErrors());
@@ -429,9 +428,12 @@ class SincronizarGSUITE extends AbstractSincronizar
 //            ),
         ));
 
-        if($evento->getEstado() == self::ESTADO_EVENTO_ACTIVO){
+        if ($evento->getEstado() == self::ESTADO_EVENTO_ACTIVO) {
             $event->setStatus(self::ESTADO_EVENTO_CONFIRMADO);
+        } else {
+            $event->setStatus(self::ESTADO_EVENTO_ELIMINADO);
         }
+
 
         //Añadimos los recordatorios en caso de exisitir
         $reminder = self::_generarRecordatorios($evento);
@@ -448,7 +450,8 @@ class SincronizarGSUITE extends AbstractSincronizar
      * @param Evento $evento
      * @return Google_Service_Calendar_EventDateTime[]
      */
-    private function _generarFechasEvento(Evento $evento): array
+    private
+    function _generarFechasEvento(Evento $evento): array
     {
         //Generamos las fechas de inicio y fin del evento
         $fecha_inicio = new Google_Service_Calendar_EventDateTime(); //Declaración de la fecha
@@ -481,7 +484,8 @@ class SincronizarGSUITE extends AbstractSincronizar
      * @param Evento $evento
      * @return Google_Service_Calendar_EventReminders|null
      */
-    private function _generarRecordatorios(Evento $evento): Google_Service_Calendar_EventReminders
+    private
+    function _generarRecordatorios(Evento $evento): Google_Service_Calendar_EventReminders
     {
         $overrides = array();
         if ($evento->getRecordatorioMinutosEmail() != "" || $evento->getRecordatorioMinutosEmail() != null || $evento->getRecordatorioMinutosEmail() != 0) {
