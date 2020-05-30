@@ -52,31 +52,29 @@ class SincronizarEventos
         if ($this->destino instanceof SincronizarCSV) {
 
             if (!isset($opciones['nombre_ficheros']) || $opciones['nombre_ficheros'] == null || $opciones['nombre_ficheros'] == '') {
-                $nombre_fichero_evento= 'datosEventos';
+                $nombre_fichero_evento = 'datosEventos';
                 $nombre_fichero_eventos_calendario = 'datosEventosCalendario';
-            }else{
-                $nombre_fichero_evento= $opciones['nombre_ficheros']['nombre_fichero_eventos'];
+            } else {
+                $nombre_fichero_evento = $opciones['nombre_ficheros']['nombre_fichero_eventos'];
                 $nombre_fichero_eventos_calendario = $opciones['nombre_ficheros']['nombre_fichero_eventos_calendario'];
             }
 
-            $archivo_evento_csv = fopen(__DIR__ . '/../var/ficherosCSV/Exportacion/' . $nombre_fichero_evento. '.csv', 'w');
+            $archivo_evento_csv = fopen(__DIR__ . '/../var/ficherosCSV/Exportacion/' . $nombre_fichero_evento . '.csv', 'w');
             $archivo_eventos_calendario_csv = fopen(__DIR__ . '/../var/ficherosCSV/Exportacion/' . $nombre_fichero_eventos_calendario . '.csv', 'w');
 
             if ($archivo_evento_csv && $archivo_eventos_calendario_csv) {
                 fputs($archivo_evento_csv, 'idEventoUnico;Titulo;Descripcion;Zona horaria;Localización;"Fecha Inicio YYYY-MM-DD";"Hora Inicio HH:MM:SS";"Fecha FinYYYY-MM-DD";"Hora Fin HH:MM:SS";"Alerta Mail (en minutos)";"Alerta POPUP (en minutos)";color;acción' . PHP_EOL);
                 fputs($archivo_eventos_calendario_csv, 'idEvento;Calendario;Estado' . PHP_EOL);
 
-                if (isset($datos_origen['eventos']) && isset($datos_origen['eventos_calendario']) ) {
+                if (count($datos_origen) > 0) {
 
-                    foreach ($datos_origen['eventos_calendario'] as $index => $datos_evento_calendario) {
-                        foreach ($datos_evento_calendario as $index => $evento_calendario) {
-                            /**
-                             * @var EventoCalendario $evento_calendario
-                             */
-                            $lineas_ficheros = $this->destino->aniadirEvento($evento_calendario->getEvento(), $evento_calendario->getCalendario());
-                            fputs($archivo_evento_csv, $lineas_ficheros['evento'] . PHP_EOL);
-                            fputs($archivo_eventos_calendario_csv, $lineas_ficheros['eventos_calendario'] . PHP_EOL);
-                        }
+                    foreach ($datos_origen as $evento_calendario) {
+                        /**
+                         * @var EventoCalendario $evento_calendario
+                         */
+                        $lineas_ficheros = $this->destino->aniadirEvento($evento_calendario->getEvento(), $evento_calendario->getCalendario());
+                        fputs($archivo_evento_csv, $lineas_ficheros['evento'] . PHP_EOL);
+                        fputs($archivo_eventos_calendario_csv, $lineas_ficheros['eventos_calendario'] . PHP_EOL);
                     }
 
                 }
@@ -110,8 +108,10 @@ class SincronizarEventos
                     }
                     $this->logger->debug('Calendario: ' . $evento_calendario->getCalendario()->getCalendario() . ' - Evento: ' . $evento_calendario->getEvento()->getIdEvento() . ' - Accion: ' . $evento_calendario->getEvento()->getAccion());
                     $comprobacion_evento = $this->destino->comprobarEvento($evento_calendario->getEvento(), $evento_calendario->getCalendario());
-                    if($evento_calendario->getEvento()->getAccion() == "" | $evento_calendario->getEvento()->getAccion() == null){
+                    if (($evento_calendario->getEvento()->getAccion() == "" || $evento_calendario->getEvento()->getAccion() == null) && $evento_calendario->getEvento()->getEstado() == Sincronizar::ESTADO_EVENTO_ACTIVO) {
                         $evento_calendario->getEvento()->setAccion(Sincronizar::ACCION_INSERTAR);
+                    } else if (($evento_calendario->getEvento()->getAccion() == "" || $evento_calendario->getEvento()->getAccion() == null) && $evento_calendario->getEvento()->getEstado() == Sincronizar::ESTADO_EVENTO_ELIMINADO) {
+                        $evento_calendario->getEvento()->setAccion(Sincronizar::ACCION_ELIMINAR);
                     }
                     switch ($evento_calendario->getEvento()->getAccion()) {
                         case Sincronizar::ACCION_INSERTAR:
