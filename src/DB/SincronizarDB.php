@@ -413,28 +413,4 @@ class SincronizarDB extends AbstractSincronizar
 
     }
 
-    /**
-     * @param Calendario $calendario
-     * @return int
-     */
-    private function _comprobarCalendarioConCreacion(Calendario $calendario): int
-    {
-        $idCalendario = self::comprobarCalendario($calendario);
-
-        if ($idCalendario != 0) {
-            try {
-                $stmt = $this->conexion->prepare("INSERT INTO 'calendarios' ('calendario') VALUES (:calendario)");
-                $stmt->bindValue(':calendario', $calendario->getCalendario(), PDO::PARAM_STR);
-
-                $exito = $stmt->execute();
-                $idCalendario = $this->conexion->lastInsertId();
-
-            } catch (PDOException $ex) {
-                $this->logger->error('Error al insertar un calendario:', $ex->getMessage());
-                die();
-            }
-        }
-        return $idCalendario;
-    }
-
 }
