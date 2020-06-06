@@ -318,7 +318,7 @@ class SincronizarGSUITE extends AbstractSincronizar
                         $evento_encontrado->setHoraInicio(date('H:i:s', strtotime($evento->getStart()->getDateTime())));
                     }
                     if ($evento->getEnd()->getDate() != null) {
-                        $evento_encontrado->setFechaFin($evento->getFin()->getDate());
+                        $evento_encontrado->setFechaFin($evento->getEnd()->getDate());
                     }
                     if ($evento->getEnd()->getDateTime() != null) {
                         $evento_encontrado->setFechaFin(date('Y-m-d', strtotime($evento->getEnd()->getDateTime())));
