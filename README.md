@@ -1,96 +1,174 @@
-# Título del Proyecto
+# Libreria para la gestión de eventos
 
-_Acá va un párrafo que describa lo que es el proyecto_
+_Librería que nos permitira gestionar unos eventos de forma automática y masiva._
+
+_Con esta libreria podremos gestionar eventos en un fichero CSV, en una Base de datos y en GSuite_
+
+_Como veremos más adelante nos permite realizar taras de importación y exportación de cada uno de los sistemas nombrados anteriormente_
 
 ## Comenzando 🚀
 
 _Estas instrucciones te permitirán obtener una copia del proyecto en funcionamiento en tu máquina local para propósitos de desarrollo y pruebas._
 
-Mira **Deployment** para conocer como desplegar el proyecto.
-
-
-### Pre-requisitos 📋
-
-_Que cosas necesitas para instalar el software y como instalarlas_
-
-```
-Da un ejemplo
-```
-
 ### Instalación 🔧
 
-_Una serie de ejemplos paso a paso que te dice lo que debes ejecutar para tener un entorno de desarrollo ejecutandose_
+_Debes tener instalado:_
+* [PHP](https://www.php.net/) - El lenguaje utilizado
+* [COMPOSER](https://getcomposer.org/) - Manejador de dependencias
+* [POSTGRESQL](https://www.postgresql.org/) - Base de datos utilizada
 
-_Dí cómo será ese paso_
+## Ejemplo de implantación ⚙️
 
-```
-Da un ejemplo
-```
-
-_Y repite_
-
-```
-hasta finalizar
-```
-
-_Finaliza con un ejemplo de cómo obtener datos del sistema o como usarlos para una pequeña demo_
-
-## Ejecutando las pruebas ⚙️
-
-_Explica como ejecutar las pruebas automatizadas para este sistema_
-
-### Analice las pruebas end-to-end 🔩
-
-_Explica que verifican estas pruebas y por qué_
+_Ejemplo sincronizar CSV a Base de datos_
 
 ```
-Da un ejemplo
+$logger = new Logger('EventosGsuite');
+$logger->pushHandler(new StreamHandler('eventosDB.log'));
+$logger->info('Inicio de la ejecución');
+
+$ficheros = array(
+    'eventos' => 'insert',
+    'eventosCalendarios' => 'evento_calendario',
+);
+try {
+    $conexion = new PDO('pgsql:host=localhost port=PUERTOBD dbname=NOMBREBD', 'postgres', 'PASSBD');
+    $conexion->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING);
+
+} catch (PDOException $ex) {
+    $ex->getMessage();
+}
+
+$origen = new SincronizarCSV($logger);
+$destino = new SincronizarDB($conexion, $logger);
+
+$sincronizar = new SincronizarEventos($origen, $destino, $logger);
+$sincronizar->sincronizar($ficheros);
+
 ```
 
-### Y las pruebas de estilo de codificación ⌨️
-
-_Explica que verifican estas pruebas y por qué_
+_Ejemplo sincronizar CSV a GSuite_
 
 ```
-Da un ejemplo
+$logger = new Logger('EventosGsuite');
+$logger->pushHandler(new StreamHandler('eventosgsuite.log'));
+$logger->info('Inicio de la ejecución');
+
+$ficheros = array(
+    'eventos' => 'insert',
+    'eventosCalendarios' => 'evento_calendario',
+);
+$cliente = new Google_Client();
+$cliente->setApplicationName("TFG Eventos");
+$cliente->setAuthConfig('fichero.json');
+$cliente->setScopes([
+    Google_Service_Calendar::CALENDAR
+]);
+
+$origen = new SincronizarCSV($logger);
+$destino = new SincronizarGSUITE($cliente,$logger);
+
+$sincronizar = new SincronizarEventos($origen, $destino, $logger);
+$sincronizar->sincronizar($ficheros);
+
+
 ```
 
-## Despliegue 📦
+_Ejemplo sincronizar Base de datos a CSV_
 
-_Agrega notas adicionales sobre como hacer deploy_
+```
+$logger = new Logger('EventosGsuite');
+$logger->pushHandler(new StreamHandler('eventosDB.log'));
+$logger->info('Inicio de la ejecución');
 
-## Construido con 🛠️
+$ficheros = array(
+    'eventos' => 'insert',
+    'eventosCalendarios' => 'evento_calendario',
+);
+try {
+    $conexion = new PDO('pgsql:host=localhost port=PUERTOBD dbname=NOMBREBD', 'postgres', 'PASSBD');
+    $conexion->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING);
 
-_Menciona las herramientas que utilizaste para crear tu proyecto_
+} catch (PDOException $ex) {
+    $ex->getMessage();
+}
 
-* [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - El framework web usado
-* [Maven](https://maven.apache.org/) - Manejador de dependencias
-* [ROME](https://rometools.github.io/rome/) - Usado para generar RSS
+$origen = new SincronizarDB($conexion, $logger);
+$destino = new SincronizarCSV($logger);
 
-## Contribuyendo 🖇️
+$sincronizar = new SincronizarEventos($origen, $destino, $logger);
+$sincronizar->sincronizar($ficheros);
 
-Por favor lee el [CONTRIBUTING.md](https://gist.github.com/villanuevand/xxxxxx) para detalles de nuestro código de conducta, y el proceso para enviarnos pull requests.
 
-## Wiki 📖
+```
+_Ejemplo sincronizar GSuite a CSV_
 
-Puedes encontrar mucho más de cómo utilizar este proyecto en nuestra [Wiki](https://github.com/tu/proyecto/wiki)
+```
+$logger = new Logger('Eventos de GSUITE a CSV');
+$logger->pushHandler(new StreamHandler(__DIR__.'/var/log/eventosGsuiteCsv.log'));
+$logger->debug('Inicio de la ejecución traspaso de tipo GSuite a tipo CSV');
 
-## Versionado 📌
+$cliente = new Google_Client();
+$cliente->setApplicationName("TFG Eventos");
+$cliente->setAuthConfig('fichero.json');
+$cliente->setScopes([
+    Google_Service_Calendar::CALENDAR
+]);
 
-Usamos [SemVer](http://semver.org/) para el versionado. Para todas las versiones disponibles, mira los [tags en este repositorio](https://github.com/tu/proyecto/tags).
+$origen = new SincronizarGSUITE($cliente, $logger);
+$destino = new SincronizarCSV($logger);
+
+$fechas = array(
+    'inicio' => '2020-04-15',
+    'fin' => '2020-07-07',
+);
+$nombre_ficheros = array(
+    'nombre_fichero_eventos' => date('Y-m-d').'insert_eventos',
+    'nombre_fichero_eventos_calendario' => date('Y-m-d').'insert_eventos_calendario',
+);
+$sincronizar = new SincronizarEventos($origen, $destino, $logger);
+$sincronizar->sincronizar($opciones);
+
+
+```
+_Ejemplo sincronizar GSuite a Base de datos_
+
+```
+$logger = new Logger('Eventos de GSUITE a CSV');
+$logger->pushHandler(new StreamHandler(__DIR__.'/var/log/eventosGsuiteCsv.log'));
+$logger->debug('Inicio de la ejecución traspaso de tipo GSuite a tipo CSV');
+
+$cliente = new Google_Client();
+$cliente->setApplicationName("TFG Eventos");
+$cliente->setAuthConfig('fichero.json');
+$cliente->setScopes([
+    Google_Service_Calendar::CALENDAR
+]);
+
+try {
+    $conexion = new PDO('pgsql:host=localhost port=PUERTOBD dbname=NOMBREBD', 'postgres', 'PASSBD');
+    $conexion->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING);
+
+} catch (PDOException $ex) {
+    $ex->getMessage();
+}
+
+$origen = new SincronizarGSUITE($cliente, $logger);
+$destino = new SincronizarDB($conexion,$logger);
+
+$fechas = array(
+    'inicio' => '2020-04-15',
+    'fin' => '2020-07-07',
+);
+$sincronizar = new SincronizarEventos($origen, $destino, $logger);
+$sincronizar->sincronizar(['calendario' => 'ruben.gutierrez@sauki.es', 'fechas' => $fechas]);
+
+
+```
 
 ## Autores ✒️
 
-_Menciona a todos aquellos que ayudaron a levantar el proyecto desde sus inicios_
+* **Rubén Gutiérrez Pérez** - *Trabajo Final de Grado* - [contacto](ruben.gutierrez.perez@alumnos.ui1.es)
 
-* **Andrés Villanueva** - *Trabajo Inicial* - [villanuevand](https://github.com/villanuevand)
-* **Fulanito Detal** - *Documentación* - [fulanitodetal](#fulanito-de-tal)
-
-También puedes mirar la lista de todos los [contribuyentes](https://github.com/your/project/contributors) quíenes han participado en este proyecto. 
-
-## Licencia 📄
-
-Este proyecto está bajo la Licencia (Tu Licencia) - mira el archivo [LICENSE.md](LICENSE.md) para detalles
 
 ## Expresiones de Gratitud 🎁
 
@@ -99,7 +177,5 @@ Este proyecto está bajo la Licencia (Tu Licencia) - mira el archivo [LICENSE.md
 * Da las gracias públicamente 🤓.
 * etc.
 
-
-
 ---
-⌨️ con ❤️ por [Villanuevand](https://github.com/Villanuevand) 😊
+⌨️ con ❤️ por [RubénGutierrez](https://github.com/RubenGuti92) 😊

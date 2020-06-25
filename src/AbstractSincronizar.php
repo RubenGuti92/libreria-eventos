@@ -9,7 +9,14 @@ use Exception;
 abstract class AbstractSincronizar implements Sincronizar
 {
     /**
-     * Función que genera el id del evento sirve para generarlo como para poder identificar el evento
+     * Para generar el id utilizaremos un serie de valores para que sea único. Lo generamos debido a que al utilizar un csv para la isercción, edicion y eliminación debemos poder conocer los ids,
+     * los cuales no se almacenarán.
+     * Por ello utilizaremos hexadecimal para generar dicho id formado por:
+     * - PREFIJO de la aplicacion
+     * - correo de la persona
+     * - id ÚNICO asignado al evento
+     * - Año de la fecha del inicio del evento
+     *
      *
      * @param Evento $evento
      * @param string $calendario

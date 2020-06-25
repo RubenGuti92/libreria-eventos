@@ -9,10 +9,17 @@ use SincronizarEvento\Calendario;
 use SincronizarEvento\Evento;
 use SincronizarEvento\Sincronizar;
 
+/**
+ * Class SincronizarCSV
+ * @package SincronizarEvento\CSV
+ *
+ * Clase que implementa la interfaz Sincronizar, la cual es la encargada de realizar toda la funcionalidad.
+ *
+ */
 class SincronizarCSV implements Sincronizar
 {
 
-    const DELIMITADOR_FICHERO = ';';
+    const DELIMITADOR_FICHERO = ';';//Delimitador de los campos en el CSV
     private $logger;
 
     /**
@@ -21,13 +28,16 @@ class SincronizarCSV implements Sincronizar
      */
     public function __construct($logger)
     {
-
         $this->logger = $logger;
     }
 
 
     /**
-     * @inheritDoc
+     * Función que se encarga de "insertar" eventos en un fichero CSV, lo que hace es devoler la fila correspodiente a cada fichero.
+     *
+     * @param Evento $evento
+     * @param Calendario $calendario
+     * @return mixed|Evento
      */
     public function aniadirEvento(Evento $evento, Calendario $calendario)
     {
@@ -46,6 +56,7 @@ class SincronizarCSV implements Sincronizar
         $fila_datos_evento .= ($evento->getRecordatorioMinutosPopUp() != null || $evento->getRecordatorioMinutosPopUp()) ? $evento->getRecordatorioMinutosPopUp() . self::DELIMITADOR_FICHERO : self::DELIMITADOR_FICHERO;
         $fila_datos_evento .= ($evento->getColorId() != null || $evento->getColorId()) ? $evento->getColorId() . self::DELIMITADOR_FICHERO : self::DELIMITADOR_FICHERO;
         $fila_datos_evento .= self::DELIMITADOR_FICHERO; // Añadimos la ultima casilla que sería la de la accion
+        $this->logger->debug('Evento insertado');
 
 
         //Fila de los datos de la relación
@@ -65,6 +76,7 @@ class SincronizarCSV implements Sincronizar
     public function modificarEvento(Evento $evento, Calendario $calendarios)
     {
         // Función no implementada
+        $this->logger->debug('Opción modificar no implementada');
         return new BadMethodCallException('Esta función no esta implementada');
 
     }
@@ -75,6 +87,7 @@ class SincronizarCSV implements Sincronizar
     public function eliminarEvento(Evento $evento, Calendario $calendarios)
     {
         // Función no implementada
+        $this->logger->debug('Opción eliminar no implementada');
         return new BadMethodCallException('Esta función no esta implementada');
     }
 
@@ -84,6 +97,7 @@ class SincronizarCSV implements Sincronizar
     public function comprobarEvento(Evento $evento, Calendario $calendario)
     {
         // Función no implmentada
+        $this->logger->debug('Opción comprobar evento no implementada');
         return new BadMethodCallException('Esta función no esta implementada');
     }
 
@@ -93,6 +107,7 @@ class SincronizarCSV implements Sincronizar
     public function comprobarCalendario(Calendario $calendario)
     {
         // Función no implmentada
+        $this->logger->debug('Opción comprobar calendario no implementada');
         return new BadMethodCallException('Esta función no esta implementada');
     }
 
@@ -101,6 +116,7 @@ class SincronizarCSV implements Sincronizar
      */
     public function obtenerEventos($opciones)
     {
+        $this->logger->debug('Se comienza a obtener los eventos');
         //En las opciones debemos enviar el nombre (sin extensión) de los ficheros alojados en var/ficheros
         $fichero_eventos = __DIR__ . '/../../var/ficherosCSV/' . $opciones['eventos'] . '.csv';
         $fichero_eventos_calendarios = __DIR__ . '/../../var/ficherosCSV/' . $opciones['eventosCalendarios'] . '.csv';

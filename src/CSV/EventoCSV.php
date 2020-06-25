@@ -6,6 +6,13 @@ namespace SincronizarEvento\CSV;
 
 use SincronizarEvento\Evento;
 
+/**
+ * Class EventoCSV
+ * @package SincronizarEvento\CSV
+ *
+ * Clase que implementará la interfaz Evento para los ficheros CSV.
+ *
+ */
 class EventoCSV implements Evento
 {
 

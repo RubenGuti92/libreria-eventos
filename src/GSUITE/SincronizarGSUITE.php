@@ -19,6 +19,14 @@ use Google_Service_Calendar_Event;
 use Google_Service_Calendar_EventDateTime;
 use Psr\Log\LoggerInterface;
 
+/**
+ * Class SincronizarCSV
+ * @package SincronizarEvento\CSV
+ *
+ * Clase que se extiene de la clase abstracta AbstractSincronizar que a su vez
+ * implementa la interfaz Sincronizar, la cual es la encargada de realizar toda la funcionalidad.
+ *
+ */
 class SincronizarGSUITE extends AbstractSincronizar
 {
     /**
@@ -27,14 +35,13 @@ class SincronizarGSUITE extends AbstractSincronizar
     private $cliente;
     private $logger;
 
-
+    //Estados de los eventos segun GSuite
     const ESTADO_EVENTO_CONFIRMADO = 'confirmed';
     const ESTADO_EVENTO_CONFIRMADO_PARCIAL = 'tentative';
     const ESTADO_EVENTO_ELIMINADO = 'cancelled';
 
     public function __construct($cliente, $logger)
     {
-
         $this->cliente = $cliente;
         $this->logger = $logger;
     }
@@ -44,6 +51,7 @@ class SincronizarGSUITE extends AbstractSincronizar
      */
     public function comprobarCalendario(Calendario $calendario)
     {
+        //Comprobamos si existe esa cuenta dentro de la organización
         $this->cliente->setSubject($calendario->getCalendario());
         $servicio_google = new Google_Service_Calendar($this->cliente);
         try {
@@ -61,20 +69,10 @@ class SincronizarGSUITE extends AbstractSincronizar
      */
     public function aniadirEvento(Evento $evento, Calendario $calendario)
     {
+        //Insertamos un evento en el calendario
         $this->logger->debug('Se inserta un evento');
-        //Correo al que se le inserta el evento
-//        $cliente = $this->cliente;
         $this->cliente->setSubject($calendario->getCalendario());
 
-        /**
-         * Para generar el id utilizaremos un serie de valores para que sea único. Lo generamos debido a que al utilizar un csv para la isercción, edicion y eliminación debemos poder conocer los ids,
-         * los cuales no se almacenarán.
-         * Por ello utilizaremos md5 para generar dicho id formado por:
-         * - correo de la persona
-         * - id ÚNICO asignado al evento
-         * - Año de la fecha del inicio del evento
-         *
-         */
         $id = self::generarIdEvento($evento, $calendario);
         $evento->setIdEvento($id);
 
@@ -82,6 +80,7 @@ class SincronizarGSUITE extends AbstractSincronizar
 
         $servicio_google = new Google_Service_Calendar($this->cliente);
         try {
+            //Insertamos el evento en el calendario principal de la cuenta de GSuite
             $servicio_google->events->insert('primary', $evento_google);
             return $evento;
             $this->logger->debug('Se inserta el evento con id:' . $id);
@@ -96,8 +95,7 @@ class SincronizarGSUITE extends AbstractSincronizar
      */
     public function modificarEvento(Evento $evento, Calendario $calendarios)
     {
-
-//        $cliente = $this->cliente;
+        //Modificamos un evento
         $this->cliente->setSubject($calendarios->getCalendario());
 
         $id = self::generarIdEvento($evento, $calendarios);
@@ -106,6 +104,7 @@ class SincronizarGSUITE extends AbstractSincronizar
 
         $servicio_google = new Google_Service_Calendar($this->cliente);
         try {
+            //Actualizamos el evento
             $evento = $servicio_google->events->update('primary', $evento->getIdEvento(), $evento_google);
             return $evento;
             $this->logger->debug('Evento actualizado id:' . $id);
@@ -120,7 +119,7 @@ class SincronizarGSUITE extends AbstractSincronizar
      */
     public function eliminarEvento(Evento $evento, Calendario $calendarios)
     {
-//        $cliente = $this->cliente;
+        //Se "elimina" aunque realmente sigue exisitiendo el evento
         $this->cliente->setSubject($calendarios->getCalendario());
 
         $idEventoEliminar = self::generarIdEvento($evento, $calendarios);
@@ -146,6 +145,7 @@ class SincronizarGSUITE extends AbstractSincronizar
      */
     public function comprobarEvento(Evento $evento, Calendario $calendario)
     {
+        //Comprobamos si existe dicho evento en el calendario asi como si tiene algun cambio
         $this->cliente->setSubject($calendario->getCalendario());
 
         $servicio_google = new Google_Service_Calendar($this->cliente);
@@ -407,25 +407,6 @@ class SincronizarGSUITE extends AbstractSincronizar
             'guestsCanSeeOtherGuests' => False,// no se permite que los asistentes vean al resto de asistentes
             'visibility' => 'private', // Solo los asistentes pueden ver los detalles del evento
             'colorId' => $evento->getColorId(), // Color que va a tener el evento en google calendar
-//            //Fecha inicio del evento
-//            'start' => array(
-////                'date' => $evento->getFechaInicio(),
-//                'dateTime' => $fechaInicio,
-//                'timeZone' => $evento->getZonaHoraria(),
-//            ),
-//            //Fecha fin del evento
-//            'end' => array(
-////                'date' => $evento->getFechaFin(),
-//                'dateTime' => $fechaFin,
-//                'timeZone' => $evento->getZonaHoraria(),
-//            ),
-//            'recurrence' => array(
-//                'RRULE:FREQ=DAILY;COUNT=2'
-//            ),
-//            'attendees' => array(
-//                array('email' => 'lpage@example.com'),
-//                array('email' => 'sbrin@example.com'),
-//            ),
         ));
 
         if ($evento->getEstado() == self::ESTADO_EVENTO_ACTIVO) {

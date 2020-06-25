@@ -6,6 +6,14 @@ namespace SincronizarEvento\GSUITE;
 
 use SincronizarEvento\Evento;
 
+/**
+ * Class EventoGSuite
+ * @package SincronizarEvento\GSuite
+ *
+ * Clase que implementará la interfaz Evento para los ficheros GSuite.
+ *
+ */
+
 class EventoGSUITE implements Evento
 {
 

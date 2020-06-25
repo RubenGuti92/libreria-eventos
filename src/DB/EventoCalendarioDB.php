@@ -8,6 +8,13 @@ use SincronizarEvento\Calendario;
 use SincronizarEvento\Evento;
 use SincronizarEvento\EventoCalendario;
 
+/**
+ * Class EventoCalendarioDB
+ * @package SincronizarEvento\DB
+ *
+ * Clase que implementará la interfaz EventoCalendario para los ficheros DB.
+ *
+ */
 class EventoCalendarioDB implements EventoCalendario
 {
 

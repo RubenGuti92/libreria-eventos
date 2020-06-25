@@ -7,9 +7,15 @@ namespace SincronizarEvento\DB;
 use SincronizarEvento\Calendario;
 use SincronizarEvento\Evento;
 
+/**
+ * Class CalendarioDB
+ * @package SincronizarEvento\DB
+ *
+ * Clase que implentará la interfaz calendario para que ser utulizada por ficheros DB.
+ *
+ */
 class CalendarioDB implements Calendario
 {
-    private $evento;
     private $calendario;
 
     public function getCalendario()

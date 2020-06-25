@@ -2,6 +2,12 @@
 
 namespace SincronizarEvento;
 
+/**
+ * Interface EventoCalendario
+ * @package SincronizarEvento
+ *
+ * Interfaz que será la relacion entre un evento y un calendario.
+ */
 interface EventoCalendario
 {
     public function getEvento();

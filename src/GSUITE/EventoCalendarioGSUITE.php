@@ -8,6 +8,14 @@ use SincronizarEvento\Calendario;
 use SincronizarEvento\Evento;
 use SincronizarEvento\EventoCalendario;
 
+/**
+ * Class EventoCalendarioGSuite
+ * @package SincronizarEvento\GSuite
+ *
+ * Clase que implementará la interfaz EventoCalendario para los ficheros GSuite.
+ *
+ */
+
 class EventoCalendarioGSUITE implements EventoCalendario
 {
 

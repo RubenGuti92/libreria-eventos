@@ -6,6 +6,13 @@ namespace SincronizarEvento\DB;
 
 use SincronizarEvento\Evento;
 
+/**
+ * Class EventoDB
+ * @package SincronizarEvento\DB
+ *
+ * Clase que implementará la interfaz Evento para los ficheros DB.
+ *
+ */
 class EventoDB implements Evento
 {
 

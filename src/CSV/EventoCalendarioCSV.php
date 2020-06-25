@@ -8,6 +8,13 @@ use SincronizarEvento\Calendario;
 use SincronizarEvento\Evento;
 use SincronizarEvento\EventoCalendario;
 
+/**
+ * Class EventoCalendarioCSV
+ * @package SincronizarEvento\CSV
+ *
+ * Clase que implementará la interfaz EventoCalendario para los ficheros CSV.
+ *
+ */
 class EventoCalendarioCSV implements EventoCalendario
 {
 

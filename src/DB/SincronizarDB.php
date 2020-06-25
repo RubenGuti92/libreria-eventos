@@ -33,8 +33,10 @@ class SincronizarDB extends AbstractSincronizar
     public function aniadirEvento(Evento $evento, Calendario $calendario)
     {
         $comprobacion_evento = self::_comprobacionEventoTabla($evento);
+        $this->logger->debug('Se comprueba el evento:', $comprobacion_evento);
 
         if ($comprobacion_evento == self::NO_EXISTE) {
+            //Comprobamos si el evento no existe en ese caso se insertara el evento
             try {
                 $stmt = $this->conexion->prepare('INSERT INTO "eventos" ("idEvento","titulo", "descripcion","fechaInicio", "fechaFin","horaInicio","horaFin","zonaHoraria","localizacion","recordatorioMinutosEmail","recordatorioMinutosPopUp","colorId","accion")
                                                        VALUES (:idEvento,:titulo,:descripcion,:fechaInicio,:fechaFin,:horaInicio,:horaFin,:zonaHoraria,:localizacion,:recordatorioMinutosEmail,:recordatorioMinutosPopUp,:colorId,:accion)');
@@ -58,6 +60,7 @@ class SincronizarDB extends AbstractSincronizar
 
                 $stmt->execute();
                 $idUnicoEvento = $this->conexion->lastInsertId();
+                $this->logger->debug('Se inserta el evento con id:', $idUnicoEvento);
 
             } catch (PDOException $ex) {
                 $this->logger->error('Error al comprobar un evento:', $ex->getMessage());
@@ -73,6 +76,7 @@ class SincronizarDB extends AbstractSincronizar
         }
 
         try {
+            //Se inserta la relacion de evento calendario
             $stmt = $this->conexion->prepare('INSERT INTO "eventos_calendarios" ("evento", "calendario", "idEventoCalendarioPlataforma","activo") VALUES (:evento, :calendario, :idEventoCalendarioPlataforma,:activo)');
             $stmt->bindValue(':evento', $evento->getIdEvento(), PDO::PARAM_STR);
             $stmt->bindValue(':calendario', $calendario->getCalendario(), PDO::PARAM_STR);
@@ -94,8 +98,10 @@ class SincronizarDB extends AbstractSincronizar
      */
     public function modificarEvento(Evento $evento, Calendario $calendario)
     {
+        //Obtenemos el id unico del evento
         $idEventoCalendarioPlataforma = self::generarIdEvento($evento, $calendario);
 
+        //Se busca el evento en la base de datos
         $stmt = $this->conexion->prepare('SELECT "evento","calendario" FROM "eventos_calendarios" WHERE "idEventoCalendarioPlataforma" = :idEventoCalendarioPlataforma ;');
         $stmt->bindValue(':idEventoCalendarioPlataforma', $idEventoCalendarioPlataforma);
         $stmt->execute();
@@ -111,6 +117,7 @@ class SincronizarDB extends AbstractSincronizar
             $evento->setEstado(true);
 
             try {
+                //Actualizamos el evento de la tablas de eventos
                 $stmt = $this->conexion->prepare('UPDATE "eventos"
                                               SET "titulo" = :titulo, "descripcion" = :descripcion,"fechaInicio" = :fechaInicio, "fechaFin" = :fechaFin,"horaInicio" = :horaInicio,"horaFin" = :horaFin,
                                                     "zonaHoraria" = :zonaHoraria,"localizacion" = :localizacion,"recordatorioMinutosEmail" = :recordatorioMinutosEmail,"recordatorioMinutosPopUp" = :recordatorioMinutosPopUp,
@@ -141,6 +148,7 @@ class SincronizarDB extends AbstractSincronizar
 
         if ($idCalendario != null) {
             try {
+                //Actualizamos la relacion de evento calendario
                 $stmt = $this->conexion->prepare('UPDATE "eventos_calendarios"
                                               SET "activo" = :estado 
                                               WHERE "idEventoCalendarioPlataforma" = :idEventoCalendarioPlataforma');
@@ -162,9 +170,11 @@ class SincronizarDB extends AbstractSincronizar
      */
     public function eliminarEvento(Evento $evento, Calendario $calendario)
     {
+        //Obtenemos el id unico del evento
         $idEventoCalendarioPlataforma = self::generarIdEvento($evento, $calendario);
 
         try {
+            //Actualizamos para desactivar el evento
             $stmt = $this->conexion->prepare('UPDATE "eventos_calendarios"
                                               SET "activo" = :estado 
                                               WHERE "idEventoCalendarioPlataforma" = :idEventoCalendarioPlataforma');
@@ -185,6 +195,7 @@ class SincronizarDB extends AbstractSincronizar
     public function comprobarEvento(Evento $evento, Calendario $calendario)
     {
         try {
+            //Comprobamos el evento y en función de las caracteristicas devolvemos como se encuentra
             $comprobacion_evento = self::EXISTE_IGUAL;
             $idEventoCalendarioPlataforma = self::generarIdEvento($evento, $calendario);
             //Comprobamos si el evento ha sido insertado en el calendario
@@ -219,6 +230,7 @@ class SincronizarDB extends AbstractSincronizar
      */
     private function _comprobacionEventoTabla(Evento $evento)
     {
+        //Función encargada de buscar y comparar el evento de forma que sea capaz de detectar si existe algún cambio.
         $datos_evento = array(
             'existen_cambios' => Sincronizar::EXISTE_IGUAL,
             'cadena_cambios' => '',
@@ -325,8 +337,10 @@ class SincronizarDB extends AbstractSincronizar
      */
     public function obtenerEventos($options)
     {
+        //Función que obtiene los eventos de la base de datos, devolverá un array con todos los datos.
         $datos_evento_calendario = array();
 
+        //Comprobamos las opciones que ha pasado el usuario, en caso de no insetar incio o fin se mirara 6 meses atras o 6 meses en adelante
         if (!isset($opciones['fechas']['inicio'])) {
             //Si no existe la fecha de incio cogemos la de hace 6 meses
             $fecha_hoy = date("Y-m-d", strtotime("now - 6 month"));
@@ -349,6 +363,7 @@ class SincronizarDB extends AbstractSincronizar
             }
         }
 
+        //Obtenemos los eventos en la base de datos que cumplan esas fechas
         $stmt = $this->conexion->prepare('SELECT "id","idEvento","titulo", "descripcion","fechaInicio", "fechaFin","horaInicio","horaFin","zonaHoraria","localizacion","recordatorioMinutosEmail","recordatorioMinutosPopUp","colorId" ,"accion" 
                                             FROM eventos e
                                             WHERE "fechaInicio" >= :fechaInicio AND "fechaFin" <= :fechaFin;');
@@ -381,6 +396,7 @@ class SincronizarDB extends AbstractSincronizar
         }
 
         if (count($array_eventos) > 0) {
+            //Recorremos los resultados para formar el array que devolveremos con todos los eventos.
             foreach ($array_eventos as $idEvento => $datos_evento) {
                 $stmt = $this->conexion->prepare('SELECT "id","idEventoCalendarioPlataforma","evento","calendario","activo" FROM "eventos_calendarios" WHERE "evento" = :evento;');
                 $stmt->bindValue(':evento', $idEvento);

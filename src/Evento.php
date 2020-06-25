@@ -2,6 +2,13 @@
 
 namespace SincronizarEvento;
 
+/**
+ * Interface Evento
+ * @package SincronizarEvento
+ *
+ * Interfaz evento que obligará a que todas las clases que lo implementen tengan las siguientes propiedades y metodos
+ *
+ */
 interface Evento
 {
     public function getIdEvento();
