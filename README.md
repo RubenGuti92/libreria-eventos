@@ -160,7 +160,7 @@ $fechas = array(
     'fin' => '2020-07-07',
 );
 $sincronizar = new SincronizarEventos($origen, $destino, $logger);
-$sincronizar->sincronizar(['calendario' => 'ruben.gutierrez@sauki.es', 'fechas' => $fechas]);
+$sincronizar->sincronizar($opciones);
 
 
 ```
